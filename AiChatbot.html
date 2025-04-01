@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Profile Optimizer ChatBot</title>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" />
+		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+		<style>
+            body{
+                background-color: rgb(246, 239, 239);
+            }
+            h2{
+                color: #007bff;
+                font-size: 2em;
+                text-align: center;
+            }
+            p{
+                color: #555;
+                font-size: 1.2em;
+                text-align: center;
+                text-decoration: underline;
+            }
+            img{
+                display: block;
+                margin: 0 auto;
+                width: 200px;
+                height: auto;
+            }
+			#response {
+				margin-top: 20px;
+				padding: 10px;
+				min-height: 50px;
+			}
+			#response h3 {
+				color: #333;
+				font-size: 1.2em;
+			}
+			#response strong {
+				color: #d9534f;
+			}
+			#response ul {
+				padding-left: 20px;
+			}
+			#response li {
+				margin-bottom: 5px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+            <img src="Wikimedia_Brand_Guidelines_Update_2022_Wikimedia_Logo_Brandmark.png" alt="AI LOGO">
+			<h2>AI ChatBot</h2>
+            <p><b>Developed By:</b></p>
+            <p>Mohammed Hamza  12307352</p>
+            <p>Maria tejaswi 12309910</p>
+            <p>Adidev Nayana 12319973</p>
+			<div class="form-group">
+				<input
+					type="text"
+					class="form-control"
+					id="userInput"
+					placeholder="Enter your question" />
+			</div>
+			<button class="btn btn-success" onclick="sendMessage()">Ask!</button>
+			<div id="response"></div>
+		</div>
+		<script>
+			async function sendMessage() {
+				const input = document.getElementById('userInput').value;
+				const responseDiv = document.getElementById('response');
+				if (!input) {
+					responseDiv.innerHTML = 'Please enter a message.';
+					return;
+				}
+				responseDiv.innerHTML = 'Loading...';
+				try {
+					const response = await fetch(
+						'https://openrouter.ai/api/v1/chat/completions',
+						{
+							method: 'POST',
+							headers: {
+								Authorization: 'Bearer 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',
+								'HTTP-Referer': 'https://www.sitename.com',
+								'X-Title': 'SiteName',
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify({
+								model: 'deepseek/deepseek-r1:free',
+								messages: [{ role: 'user', content: input }],
+							}),
+						},
+					);
+					const data = await response.json();
+					console.log(data);
+					const markdownText =
+						data.choices?.[0]?.message?.content || 'No response received.';
+					responseDiv.innerHTML = marked.parse(markdownText);
+				} catch (error) {
+					responseDiv.innerHTML = 'Error: ' + error.message;
+				}
+			}
+		</script>
+	</body>
+</html>
