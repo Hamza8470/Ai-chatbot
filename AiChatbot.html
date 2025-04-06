@@ -5,17 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Optimizer ChatBot</title>
-    <link rel="icon" type="image/png" href="chat-bot-logo-design-concept-600nw-1938811039.webp">
+    <link rel="icon" type="image/png" href="download.png" id="botAvatar">
 
     <!-- Bootstrap & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Bootstrap Icons for Paperclip -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Marked.js for Markdown Rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         /* General Body Styling */
+
         body {
-            font-family: sans-serif; /* Added a common font */
+            font-family: sans-serif;
         }
 
         /* Hero Section */
@@ -46,21 +49,20 @@
             font-size: 24px;
             cursor: pointer;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            transition: opacity 0.3s ease, transform 0.3s ease; /* Added opacity transition */
-            z-index: 1050; /* Ensure it's above other elements */
-            display: flex; /* Center icon */
-            justify-content: center; /* Center icon horizontally */
-            align-items: center; /* Center icon vertically */
-            opacity: 1; /* Start visible */
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1050;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
         }
-        .chat-toggle-btn.hidden { /* Class to hide button smoothly */
+        .chat-toggle-btn.hidden {
              opacity: 0;
              transform: scale(0.5);
-             pointer-events: none; /* Prevent clicks when hidden */
+             pointer-events: none;
         }
-
         .chat-toggle-btn:hover {
-             background: #0056b3; /* Darker on hover */
+             background: #0056b3;
         }
 
         .chat-header {
@@ -68,177 +70,189 @@
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            padding: 12px 20px; /* Adjusted padding */
+            padding: 12px 18px;
             background: #007bff;
             color: white;
-            border-top-left-radius: 12px; /* Slightly larger radius */
-            border-top-right-radius: 12px; /* Slightly larger radius */
-            cursor: grab; /* Indicate draggable header */
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            cursor: grab;
         }
         .chat-header:active {
              cursor: grabbing;
         }
-
         .chat-close {
             cursor: pointer;
-            font-size: 22px; /* Slightly larger */
+            font-size: 22px;
             font-weight: bold;
-            padding: 5px; /* Easier to click */
-            line-height: 1; /* Prevent extra spacing */
-            color: rgba(255, 255, 255, 0.8); /* Slightly transparent */
+            padding: 5px;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.8);
             transition: color 0.2s ease;
         }
         .chat-close:hover {
-             color: white; /* Fully opaque on hover */
+             color: white;
         }
 
-        /* --- CHAT CONTAINER SIZE INCREASED --- */
         .chat-container {
             position: fixed;
-            bottom: 30px; /* Adjusted position slightly */
-            right: 30px;  /* Adjusted position slightly */
-            width: 480px; /* Increased width */
-            height: 650px; /* Increased height */
-            max-height: calc(100vh - 50px); /* Allow more vertical space */
+            bottom: 30px;
+            right: 30px;
+            width: 480px;
+            height: 650px;
+            max-height: calc(100vh - 50px);
             background: white;
-            border-radius: 12px; /* Match header radius */
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
-            display: none; /* Initially hidden */
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
             flex-direction: column;
-            z-index: 1040; /* Below the button but above content */
-            border: 1px solid #ccc; /* Subtle border */
-            transition: opacity 0.3s ease, transform 0.3s ease; /* Add transition for appearing/disappearing */
-            opacity: 0; /* Start hidden */
-            transform: scale(0.95) translateY(10px); /* Start slightly scaled down */
-            transform-origin: bottom right; /* Animate from bottom right corner */
+            z-index: 1040;
+            border: 1px solid #ccc;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transform-origin: bottom right;
         }
-        .chat-container.visible { /* Class to show chat window smoothly */
-             display: flex; /* Need flex first */
+        .chat-container.visible {
+             display: flex;
              opacity: 1;
              transform: scale(1) translateY(0);
         }
-        /* --- END SIZE INCREASE --- */
 
         .chat-body {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 20px; /* More padding */
-            background: #f8f9fa; /* Slightly off-white */
-            /* Removed border here to fit cleanly within container */
+            padding: 20px;
+            background: #f8f9fa;
         }
-        /* Style messages */
         .chat-body p {
-            margin-bottom: 15px; /* More space */
-            line-height: 1.5; /* Improve readability */
-            max-width: 100%; /* Ensure text wraps */
-            word-wrap: break-word; /* Prevent long words from overflowing */
+            margin-bottom: 15px;
+            line-height: 1.5;
+            max-width: 100%;
+            word-wrap: break-word;
         }
-         .chat-body p b { /* Style sender labels */
-            display: block; /* Make label appear on its own line */
-            margin-bottom: 5px; /* Space below label */
-            color: #0056b3; /* Darker blue for labels */
-            font-size: 0.9em; /* Slightly smaller label */
+         .chat-body p b {
+            display: block;
+            margin-bottom: 5px;
+            color: #0056b3;
+            font-size: 0.9em;
          }
          .chat-body p:last-child {
-             margin-bottom: 0; /* No extra space after the last message */
+             margin-bottom: 0;
          }
-         /* Specific message styling */
          .you-message {
              text-align: right;
-             margin-left: 50px; /* Indent user messages from left */
-             background-color: #e7f0ff; /* Light blue background for user */
+             margin-left: 50px;
+             background-color: #e7f0ff;
              padding: 10px 15px;
-             border-radius: 15px 15px 0 15px; /* Rounded corners */
+             border-radius: 15px 15px 0 15px;
          }
          .you-message b {
-            color: #0056b3; /* Match theme */
+            color: #0056b3;
          }
 
          .bot-message {
              text-align: left;
-             margin-right: 50px; /* Indent bot messages from right */
-             background-color: #fff; /* White background for bot */
+             margin-right: 50px;
+             background-color: #fff;
              padding: 10px 15px;
-             border-radius: 15px 15px 15px 0; /* Different rounded corners */
+             border-radius: 15px 15px 15px 0;
              border: 1px solid #eee;
          }
           .bot-message b {
-             color: #007bff; /* Slightly lighter blue */
+             color: #007bff;
          }
 
-         /* Style the container div for bot messages added via Markdown */
-         .bot-message > div {
-             margin: 0;
-             padding: 0;
-         }
+         .bot-message > div { margin: 0; padding: 0; }
          .bot-message div p,
          .bot-message div ul,
          .bot-message div ol,
          .bot-message div pre,
-         .bot-message div blockquote { /* Added blockquote */
+         .bot-message div blockquote {
              margin-bottom: 12px !important;
              line-height: 1.6;
          }
           .bot-message ul, .bot-message ol {
-              padding-left: 25px;
-              margin-bottom: 12px;
+              padding-left: 25px; margin-bottom: 12px;
           }
-          .bot-message li {
-               margin-bottom: 8px;
-          }
+          .bot-message li { margin-bottom: 8px; }
            .bot-message blockquote {
-                border-left: 4px solid #007bff;
-                padding-left: 15px;
-                margin-left: 5px;
-                color: #555;
-                font-style: italic;
+                border-left: 4px solid #007bff; padding-left: 15px;
+                margin-left: 5px; color: #555; font-style: italic;
            }
-          .bot-message code:not(pre code) { /* Inline code */
-              background-color: #e9ecef;
-              padding: 3px 6px;
-              border-radius: 4px;
-              font-size: 0.9em;
-              font-family: monospace;
+          .bot-message code:not(pre code) {
+              background-color: #e9ecef; padding: 3px 6px; border-radius: 4px;
+              font-size: 0.9em; font-family: monospace;
           }
-           .bot-message pre { /* Code block */
-               background-color: #282c34; /* Darker background */
-               color: #abb2bf; /* Light text */
-               padding: 15px;
-               border-radius: 5px;
-               overflow-x: auto;
-               font-family: monospace;
-               font-size: 0.9em;
-               line-height: 1.4;
+           .bot-message pre {
+               background-color: #282c34; color: #abb2bf; padding: 15px;
+               border-radius: 5px; overflow-x: auto; font-family: monospace;
+               font-size: 0.9em; line-height: 1.4;
            }
-           .bot-message pre code {
-                padding: 0;
-                background: none;
-                color: inherit;
-           }
+           .bot-message pre code { padding: 0; background: none; color: inherit; }
 
 
+        /* --- CHAT FOOTER ALIGNMENT FIX --- */
         .chat-footer {
-            padding: 15px 20px; /* Increased padding */
+            padding: 10px 15px;
             border-top: 1px solid #ddd;
-            display: flex;
-            align-items: center;
+            display: flex; /* Keep flex */
+            flex-direction: column; /* Stack children vertically */
+            align-items: stretch; /* Stretch children horizontally */
             background: #fff;
-            border-bottom-left-radius: 12px; /* Match container */
-            border-bottom-right-radius: 12px; /* Match container */
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            gap: 5px; /* Optional: small gap between controls row and status */
         }
+
+        /* NEW: Styles for the controls wrapper */
+        .chat-input-controls {
+            display: flex;
+            align-items: center; /* Vertically center items in this row */
+            gap: 10px; /* Space between buttons and input */
+            width: 100%; /* Take full width */
+        }
+        /* --- END ALIGNMENT FIX --- */
+
+        /* --- File Upload Button Styling --- */
+        .btn-upload {
+            flex-shrink: 0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .btn-upload:hover {
+            background-color: #5a6268;
+        }
+        .btn-upload svg {
+            width: 18px;
+            height: 18px;
+        }
+        #fileUploadInput {
+            display: none; /* Hide the actual file input */
+        }
+
         .chat-footer input[type="text"] {
-            flex-grow: 1;
-            margin-right: 10px;
+            flex-grow: 1; /* Takes remaining space */
             border-radius: 20px;
-            padding: 10px 18px; /* Larger padding */
+            padding: 10px 18px;
             border: 1px solid #ced4da;
-            font-size: 1rem; /* Standard font size */
+            font-size: 1rem;
+            min-width: 100px; /* Adjusted min-width */
         }
         .chat-footer .btn-send {
              flex-shrink: 0;
              border-radius: 50%;
-             width: 44px; /* Slightly larger */
-             height: 44px; /* Slightly larger */
+             width: 44px;
+             height: 44px;
              padding: 0;
              display: flex;
              justify-content: center;
@@ -251,10 +265,31 @@
              background-color: #0056b3;
         }
         .chat-footer .btn-send svg {
-             width: 20px; /* Larger icon */
+             width: 20px;
              height: 20px;
         }
 
+        /* --- File Status Display Styling --- */
+        #fileStatus {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-left: 5px; /* Keep small indent */
+            width: calc(100% - 10px); /* Take nearly full width */
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 3px 0;
+            min-height: 1.2em; /* Prevent layout shift */
+        }
+         #fileStatus .file-name {
+             font-weight: bold;
+             color: #007bff;
+         }
+         #fileStatus .file-error {
+             color: #dc3545; /* Bootstrap danger color */
+             font-weight: bold;
+         }
 
         #para {
             text-decoration: underline;
@@ -269,7 +304,7 @@
         }
         .typing-indicator span {
             display: inline-block;
-            width: 7px; height: 7px; /* Slightly larger dots */
+            width: 7px; height: 7px;
             background-color: #0056b3;
             border-radius: 50%;
             margin: 0 2px;
@@ -282,8 +317,8 @@
         #typingIndicator {
              color: #6c757d;
              font-style: italic;
-             padding: 10px 15px; /* Match message padding */
-             margin-right: 50px; /* Match bot message indent */
+             padding: 10px 15px;
+             margin-right: 50px;
         }
          #typingIndicator b {
              font-style: normal;
@@ -291,11 +326,19 @@
          }
 
         #logo {
-            width: 100px;
+            width: 200px;
             height: auto;
             margin-bottom: 15px;
+            filter: drop-shadow(0 0 5px #000);
         }
-
+        #botAvatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+            
+        }
         /* FAQ Accordion Styling */
         .accordion-button:not(.collapsed) { color: #fff; background-color: #007bff; }
         .accordion-button:focus { box-shadow: none; }
@@ -304,30 +347,25 @@
 
 
         /* Responsive Adjustments */
-        @media (max-width: 768px) { /* Apply adjustments earlier */
+        @media (max-width: 768px) {
             .chat-container {
-                /* On medium/small screens, make it take more width/height */
-                width: calc(100% - 40px); /* Almost full width */
-                max-width: 480px; /* But don't exceed the desktop width */
-                height: calc(100vh - 100px); /* Almost full usable height */
-                max-height: 600px; /* Limit max height */
-                bottom: 70px; /* Adjust bottom position */
-                right: 20px; /* Keep consistent right padding */
+                width: calc(100% - 40px);
+                max-width: 480px;
+                height: calc(100vh - 100px);
+                max-height: 600px;
+                bottom: 70px;
+                right: 20px;
              }
         }
         @media (max-width: 480px) {
-             /* Keep some styles from medium, maybe adjust further if needed */
              .chat-container {
-                 bottom: 70px; /* Ensure button isn't overlapped */
-                 height: calc(100vh - 90px); /* Optimize for small height */
-                 width: calc(100% - 30px); /* Adjust width for smallest screens */
-                 right: 15px; /* Adjust position for smallest screens */
+                 bottom: 70px;
+                 height: calc(100vh - 90px);
+                 width: calc(100% - 30px);
+                 right: 15px;
              }
              .chat-toggle-btn {
-                 width: 60px;
-                 height: 60px;
-                 bottom: 15px;
-                 right: 15px;
+                 width: 60px; height: 60px; bottom: 15px; right: 15px;
              }
              .hero { padding: 60px 15px; }
              h1.display-4 { font-size: 2.5rem; }
@@ -335,10 +373,13 @@
              .you-message { margin-left: 10px; }
              .bot-message { margin-right: 10px; }
              #typingIndicator { margin-right: 10px; }
-             .chat-footer { padding: 10px 15px; }
-             .chat-footer input[type="text"] { padding: 8px 15px; }
+             .chat-footer { padding: 10px 15px; gap: 4px; } /* Reduced gap */
+             .chat-input-controls { gap: 8px; } /* Reduced controls gap */
+             .chat-footer input[type="text"] { padding: 8px 15px; min-width: 80px; }
+             .btn-upload { width: 38px; height: 38px; }
              .chat-footer .btn-send { width: 40px; height: 40px; }
              .chat-footer .btn-send svg { width: 18px; height: 18px; }
+             #fileStatus { margin-left: 0; width: 100%; } /* Align left, full width */
         }
 
     </style>
@@ -349,7 +390,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
-            <img id="logo" src="chat-bot-logo-design-concept-600nw-1938811039.webp" alt="chatbot logo">
+            <img id="logo" src="download.png" alt="chatbot logo">
             <h1 class="display-4">Welcome to Profile Optimizer ChatBot</h1>
             <p class="lead">Your AI assistant for professional profile enhancement.</p>
         </div>
@@ -362,7 +403,7 @@
             <div class="row text-center">
                 <div class="col-md-4 mb-3">
                     <h4>🚀 Resume/CV Tips</h4>
-                    <p>Get AI suggestions to improve your resume or CV content.</p>
+                    <p>Get AI suggestions to improve your resume or CV content. You can even upload a .txt version!</p>
                 </div>
                 <div class="col-md-4 mb-3">
                     <h4>📊 LinkedIn Optimization</h4>
@@ -380,17 +421,21 @@
     <section class="container py-5">
         <h2 class="text-center mb-4">How It Works?</h2>
         <div class="row text-center">
-            <div class="col-md-4 mb-3">
+             <div class="col-md-3 mb-3">
                 <h5>1️⃣ Open ChatBot</h5>
                 <p>Click the 💬 button below.</p>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <h5>2️⃣ Ask Career Questions</h5>
                 <p>Type queries about resumes, LinkedIn, job search, etc.</p>
             </div>
-            <div class="col-md-4 mb-3">
-                <h5>3️⃣ Get Focused Advice</h5>
-                <p>Receive AI tips relevant to professional optimization.</p>
+            <div class="col-md-3 mb-3">
+                <h5>3️⃣ (Optional) Upload File</h5>
+                <p>Click the <i class="bi bi-paperclip"></i> to upload a .txt file (e.g., resume).</p>
+            </div>
+            <div class="col-md-3 mb-3">
+                <h5>4️⃣ Get Focused Advice</h5>
+                <p>Receive AI tips. Ask it to review your uploaded file!</p>
             </div>
         </div>
     </section>
@@ -408,7 +453,19 @@
                     </h2>
                     <div id="faq1" class="accordion-collapse collapse show" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            It checks if your question relates to professional profiles or careers. If relevant, it uses AI models via the OpenRouter API to generate improvement suggestions. Irrelevant questions are declined.
+                            It checks if your question relates to professional profiles or careers. If relevant, it uses AI models via the OpenRouter API to generate improvement suggestions. It can also analyze the text content of `.txt` files you upload. Irrelevant questions are declined.
+                        </div>
+                    </div>
+                </div>
+                 <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeadingNew">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqNew" aria-expanded="false" aria-controls="faqNew">
+                            How do I use the file upload feature?
+                        </button>
+                    </h2>
+                    <div id="faqNew" class="accordion-collapse collapse" aria-labelledby="faqHeadingNew" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Click the paperclip <i class="bi bi-paperclip"></i> icon in the chat window. Select a `.txt` file (max 100KB). After it shows "File selected", type a message asking the bot to analyze or review it (e.g., "Review my uploaded resume text"). The bot will then process the file content along with your request. Only `.txt` files are supported currently.
                         </div>
                     </div>
                 </div>
@@ -432,19 +489,19 @@
                     </h2>
                     <div id="faq3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Focus on: Resumes, CVs, LinkedIn profiles, professional portfolios, cover letters, job search strategies, interview preparation, and personal branding for career growth. General knowledge questions will be declined.
+                            Focus on: Resumes, CVs, LinkedIn profiles, professional portfolios, cover letters, job search strategies, interview preparation, and personal branding for career growth. You can ask it to review the content of uploaded `.txt` files related to these topics. General knowledge questions will be declined.
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="faqHeading4">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
-                            Does this chatbot store my data?
+                            Does this chatbot store my data or uploaded files?
                         </button>
                     </h2>
                     <div id="faq4" class="accordion-collapse collapse" aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            This webpage does not store your conversation. However, OpenRouter and the AI model provider process your input according to their privacy policies. Avoid sharing highly sensitive personal data.
+                            This webpage reads the file content locally in your browser and sends it to the AI *only when you ask it to analyze the file*. The file itself is not uploaded to our server. The text content is processed by OpenRouter and the AI provider according to their privacy policies. Avoid uploading files with highly sensitive personal data not relevant to a resume/CV. Your conversation is not stored by this webpage.
                         </div>
                     </div>
                 </div>
@@ -483,21 +540,36 @@
 
     <!-- Chatbot Window -->
     <div class="chat-container" id="chatbox">
-        <div class="chat-header" id="chatHeader"> <!-- Added ID for dragging -->
+        <div class="chat-header" id="chatHeader">
+            <img src="download.png" alt="Bot Avatar" id="botAvatar">
             <span>Profile Optimizer Bot</span>
-            <span class="chat-close" onclick="toggleChat()">✕</span> <!-- Using a simpler X -->
+            <span class="chat-close" onclick="toggleChat()">✕</span>
         </div>
         <div class="chat-body" id="response">
-             <!-- Initial bot message -->
-             <p class="bot-message"><b>Bot:</b> Hi! 👋🏻 I'm the Profile Optimizer Bot. I can help with resumes, LinkedIn, CVs, job searching, and interviews. How can I assist your career development today?</p>
+             <p class="bot-message"><b>Bot:</b> Hi! 👋🏻 I'm the Profile Optimizer Bot. I can help with resumes, LinkedIn, CVs, job searching, and interviews. You can also upload a `.txt` file (like a resume) using the <i class="bi bi-paperclip"></i> button below for me to review. How can I assist your career development today?</p>
         </div>
+        <!-- CHAT FOOTER WITH ALIGNMENT FIX -->
         <div class="chat-footer">
-            <input type="text" class="form-control" id="userInput" placeholder="Ask about resumes, LinkedIn, etc." aria-label="User input for chatbot">
-            <button class="btn btn-primary btn-send" onclick="sendMessage()" aria-label="Send message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
-                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.001.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
-                </svg>
-            </button>
+            <div class="chat-input-controls"> <!-- Wrapper Div for controls -->
+                <!-- Hidden File Input -->
+                <input type="file" id="fileUploadInput" accept=".txt" onchange="handleFileUpload(event)">
+                <!-- Styled Upload Button (using label) -->
+                <label for="fileUploadInput" class="btn btn-upload" title="Upload .txt file">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-paperclip" viewBox="0 0 16 16">
+                        <path d="M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0z"/>
+                    </svg>
+                </label>
+                <!-- Text Input -->
+                <input type="text" class="form-control" id="userInput" placeholder="Ask about resumes, or upload a file..." aria-label="User input for chatbot">
+                <!-- Send Button -->
+                <button class="btn btn-primary btn-send" onclick="sendMessage()" aria-label="Send message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
+                        <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.001.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                    </svg>
+                </button>
+            </div> <!-- END Wrapper Div -->
+            <!-- File Status Display Area -->
+            <span id="fileStatus"></span>
         </div>
     </div>
 
@@ -510,62 +582,69 @@
         const responseDiv = document.getElementById('response');
         const userInput = document.getElementById('userInput');
         const toggleButton = document.querySelector('.chat-toggle-btn');
+        const fileInput = document.getElementById('fileUploadInput');
+        const fileStatusSpan = document.getElementById('fileStatus');
 
         // --- CONFIGURATION ---
         const apiBearerToken = 'API_KEY'; // <-- PASTE YOUR KEY HERE
         const siteUrl = 'https://your-website.com'; // <-- Replace if you have one
         const siteName = 'Profile Optimizer ChatBot Landing Page'; // <-- Replace with your site's title
-        const modelIdentifier = "google/gemini-2.0-flash-lite-001"; // Free model
+        const modelIdentifier = "google/gemini-2.0-flash-lite-001"; // Use a capable free model
+        const MAX_FILE_SIZE_BYTES = 100 * 1024; // 100 KB limit for text file
 
-        // --- STRONGER RELEVANCE FILTER ---
+        // --- File Upload State ---
+        let uploadedFileContent = null;
+        let uploadedFileName = null;
+
+        // --- Relevance Filter & System Prompt ---
         const relevantKeywords = [
             "resume", "cv", "curriculum vitae","linked in", "linkedin", "portfolio", "job application",
             "job search", "job hunting", "job interview", "interview prep", "cover letter",
             "career", "professional profile", "personal brand", "networking", "skills section",
             "experience section", "summary section", "headline", "about section", "recruiter",
             "hiring manager", "ats", "applicant tracking", "optimize profile", "improve cv",
-            "enhance resume", "career advice", "job skills", "work history","overall profile",
+            "enhance resume", "career advice", "job skills", "work history", "overall profile",
+            "analyze file", "review file", "look at this document", "check my upload", "check this text","web developer","bio",
         ];
-        const systemPrompt = `You are 'Profile Optimizer Bot', an AI assistant specialized **ONLY** in professional development. Your sole purpose is to provide actionable advice on resumes, CVs, LinkedIn profiles, professional portfolios, job searching strategies, interview preparation, and personal branding for careers. **CRITICAL INSTRUCTION:** You **MUST REFUSE** to answer any question outside this specific scope. If the user asks about anything else (e.g., general knowledge, math, coding unrelated to job applications, personal life, opinions, weather, jokes, other social media platforms unless directly related to professional use like LinkedIn), you **MUST** respond by stating your specialization and politely declining the request. Do **NOT** answer off-topic questions under any circumstances. Stick strictly to your defined role. Format your relevant advice clearly using Markdown.`;
+        const systemPrompt = `You are 'Profile Optimizer Bot', an AI assistant specialized **ONLY** in professional development. Your sole purpose is to provide actionable advice on resumes, CVs, LinkedIn profiles, professional portfolios, job searching strategies, interview preparation, and personal branding for careers.
+
+**NEW CAPABILITY:** The user might provide text content from an uploaded file (e.g., a resume as text). This content will be clearly marked within their message, starting with "--- START OF UPLOADED FILE ([filename]) ---" and ending with "--- END OF UPLOADED FILE ---". When you see this, **analyze the provided text content** based on the user's request (e.g., "review my resume", "suggest improvements for this file").
+
+**CRITICAL INSTRUCTION:** You **MUST REFUSE** to answer any question outside the specific scope of professional development (resumes, CVs, LinkedIn, job search, interviews, careers, analyzing relevant uploaded text). If the user asks about anything else (e.g., general knowledge, math, coding unrelated to job applications, personal life, opinions, weather, jokes, other social media unless directly related to professional use like LinkedIn), you **MUST** respond by stating your specialization and politely declining the request. Do **NOT** answer off-topic questions under any circumstances. Stick strictly to your defined role. Format your relevant advice clearly using Markdown.`;
+
 
         // --- CHATBOT LOGIC ---
 
         function toggleChat() {
-            // Check if chatbox is currently visible or about to become visible
             const isOpening = !chatbox.classList.contains('visible');
-
             if (isOpening) {
-                // --- OPENING CHAT ---
-                chatbox.classList.add('visible'); // Add class to trigger CSS transition for showing
-                toggleButton.classList.add('hidden'); // Add class to hide button smoothly
-                userInput.focus(); // Focus input when chat opens
-
-                 // Reset position if it was dragged off-screen (optional, needs testing)
-                // const rect = chatbox.getBoundingClientRect();
-                // if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
-                //     chatbox.style.left = '';
-                //     chatbox.style.top = '';
-                //     chatbox.style.bottom = '30px'; // Reset default bottom/right
-                //     chatbox.style.right = '30px';
-                // }
-
+                chatbox.classList.add('visible');
+                toggleButton.classList.add('hidden');
+                userInput.focus();
             } else {
-                // --- CLOSING CHAT ---
-                chatbox.classList.remove('visible'); // Remove class to trigger CSS transition for hiding
-                toggleButton.classList.remove('hidden'); // Remove class to show button smoothly
+                chatbox.classList.remove('visible');
+                toggleButton.classList.remove('hidden');
+                // Optionally clear file state when closing:
+                // clearFileState();
             }
         }
 
-
-        function appendMessage(sender, message, isHtml = false) {
+        function appendMessage(sender, message, isHtml = false, fileName = null) {
             const messageElement = document.createElement("p");
             messageElement.classList.add(sender.toLowerCase() + '-message');
-            messageElement.innerHTML = `<b>${sender}:</b> `;
+            let senderPrefix = `<b>${sender}:</b> `;
+            if (sender === 'You' && fileName) {
+                 // Escape filename for safe HTML display
+                 const safeFileName = fileName.replace(/</g, "<").replace(/>/g, ">");
+                 senderPrefix = `<b>You (with ${safeFileName}):</b> `;
+            }
+            messageElement.innerHTML = senderPrefix;
 
             if (isHtml) {
+                // Use marked to parse Markdown into HTML
                 const renderedHtml = marked.parse(message);
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = renderedHtml;
+                tempDiv.innerHTML = renderedHtml; // Let marked handle sanitation (it's generally safe)
                 while (tempDiv.firstChild) {
                     messageElement.appendChild(tempDiv.firstChild);
                 }
@@ -574,17 +653,17 @@
             }
 
             responseDiv.appendChild(messageElement);
+            // Scroll to bottom smoothly after adding message
              requestAnimationFrame(() => {
                  responseDiv.scrollTo({ top: responseDiv.scrollHeight, behavior: 'smooth' });
              });
         }
 
-
          function showTypingIndicator() {
-             hideTypingIndicator();
+             hideTypingIndicator(); // Ensure only one indicator
              const typingIndicator = document.createElement("p");
              typingIndicator.id = "typingIndicator";
-             typingIndicator.classList.add('bot-message');
+             typingIndicator.classList.add('bot-message'); // Style like a bot message
              typingIndicator.innerHTML = `<b>Bot:</b> <span class="typing-indicator"><span></span><span></span><span></span></span>`;
              responseDiv.appendChild(typingIndicator);
              requestAnimationFrame(() => { // Smooth scroll
@@ -601,33 +680,99 @@
 
         function isQueryRelevant(query) {
             const lowerCaseQuery = query.toLowerCase();
-            return relevantKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+            // Relevant if keywords present OR if a file is currently uploaded and ready
+            return uploadedFileContent !== null || relevantKeywords.some(keyword => lowerCaseQuery.includes(keyword));
         }
 
-
-        async function sendMessage() {
-            const input = userInput.value.trim();
-            if (!input) return;
-
-            if (!apiBearerToken || apiBearerToken.startsWith('sk-or-v1-YOUR') || apiBearerToken.length < 50) {
-                 appendMessage("Bot", `<span style="color: orange; font-weight: bold;">SETUP NEEDED:</span> Please add a valid OpenRouter API key in the script section of this HTML file to enable the AI features.`, true);
-                 userInput.value = "";
-                 return;
-            }
-
-            userInput.value = "";
-            appendMessage("You", input);
-
-            if (!isQueryRelevant(input)) {
-                console.log("Query deemed irrelevant by keyword check:", input);
-                const refusalMessage = "My apologies, I specialize only in professional development topics like resumes, LinkedIn, job searching, and interviews. I can't help with questions outside of that scope. Could you ask something related to career optimization?";
-                setTimeout(() => { appendMessage("Bot", refusalMessage); }, 300);
-                userInput.focus();
+        // --- File Handling Logic ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                clearFileState(); // Clear if user cancels
                 return;
             }
 
-            console.log("Query deemed relevant, sending to AI:", input);
+            if (file.type !== 'text/plain') {
+                fileStatusSpan.innerHTML = `<span class="file-error">Error: Only .txt files are allowed.</span>`;
+                clearFileState(false); // Don't reset input value yet
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                 fileStatusSpan.innerHTML = `<span class="file-error">Error: File size exceeds ${MAX_FILE_SIZE_BYTES / 1024} KB limit.</span>`;
+                 clearFileState(false);
+                 return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedFileContent = e.target.result;
+                uploadedFileName = file.name;
+                const safeFileName = uploadedFileName.replace(/</g, "<").replace(/>/g, ">");
+                fileStatusSpan.innerHTML = `File selected: <span class="file-name">${safeFileName}</span> (Ready to send)`;
+                console.log(`File "${uploadedFileName}" read successfully.`);
+                userInput.focus();
+            };
+            reader.onerror = function(e) {
+                console.error("FileReader error:", e);
+                fileStatusSpan.innerHTML = `<span class="file-error">Error reading file.</span>`;
+                clearFileState();
+            };
+            reader.readAsText(file);
+        }
+
+        function clearFileState(resetInputValue = true) {
+             uploadedFileContent = null;
+             uploadedFileName = null;
+             if (resetInputValue && fileInput) {
+                 fileInput.value = null; // Reset input to allow re-selection
+             }
+             if(fileStatusSpan) fileStatusSpan.textContent = ''; // Clear status
+             console.log("File state cleared.");
+        }
+
+        // --- Main Send Message Logic ---
+        async function sendMessage() {
+            const input = userInput.value.trim();
+            const fileWasAttached = uploadedFileName !== null;
+
+            if (!input && !fileWasAttached) return; // Requires text or a staged file
+
+            if (!apiBearerToken || apiBearerToken === 'api_key' || apiBearerToken.length < 50) {
+                 appendMessage("Bot", `<span style="color: orange; font-weight: bold;">SETUP NEEDED:</span> Please add a valid OpenRouter API key in the script section.`, true);
+                 userInput.value = "";
+                 clearFileState();
+                 return;
+            }
+
+            userInput.value = ""; // Clear input field immediately
+            appendMessage("You", input || "(Asked to process uploaded file)", false, fileWasAttached ? uploadedFileName : null);
+
+            // Use combined input for relevance check, especially if only a file was uploaded
+            const combinedInputForRelevance = (input || "") + (fileWasAttached ? " analyze file" : "");
+            if (!isQueryRelevant(combinedInputForRelevance)) {
+                console.log("Query deemed irrelevant:", input);
+                const refusalMessage = "My apologies, I specialize only in professional development topics like resumes, LinkedIn, job searching, and interviews. I can't help with questions outside of that scope. Could you ask something related to career optimization, perhaps about the file you uploaded?";
+                setTimeout(() => { appendMessage("Bot", refusalMessage); }, 300);
+                userInput.focus(); // Allow user to rephrase
+                // Don't clear file yet, user might ask a relevant question next
+                return;
+            }
+
+            console.log("Query deemed relevant, processing...");
             showTypingIndicator();
+
+            // Prepare message for API, including file content if present
+            let messageForApi = input;
+            const sentFileName = uploadedFileName; // Store name before clearing state
+            if (fileWasAttached && uploadedFileContent) {
+                const fileHeader = `--- START OF UPLOADED FILE (${sentFileName}) ---\n`;
+                const fileFooter = `\n--- END OF UPLOADED FILE ---`;
+                messageForApi = `${input ? input + '\n\n' : ''}${fileHeader}${uploadedFileContent}${fileFooter}`;
+                console.log(`Sending message with attached file content: ${sentFileName}`);
+            }
+
+            // IMPORTANT: Clear the staged file state *after* preparing the API message
+            clearFileState();
 
             try {
                 const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -642,10 +787,10 @@
                         "model": modelIdentifier,
                         "messages": [
                             { "role": "system", "content": systemPrompt },
-                            { "role": "user", "content": input }
+                            { "role": "user", "content": messageForApi } // Send combined message
                         ],
                          "temperature": 0.6,
-                         "max_tokens": 600,
+                         "max_tokens": 1500, // Allow more tokens for file analysis
                     }),
                 });
 
@@ -657,10 +802,13 @@
                          const errorData = await response.json();
                          console.error("API Error Response:", errorData);
                          errorDetails += ` - ${errorData.error?.message || 'No details provided.'}`;
-                         if(response.status === 401) errorDetails += " (Check API key validity/permissions)";
+                         if(response.status === 401) errorDetails += " (Check API key)";
                          if(response.status === 402) errorDetails += " (Check OpenRouter credits)";
-                         if(response.status === 429) errorDetails += " (Rate limit likely exceeded)";
-                    } catch (e) { console.error("Could not parse error JSON:", e); }
+                         if(response.status === 429) errorDetails += " (Rate limit)";
+                         if(response.status === 400 && errorData.error?.message?.includes("token limit")) {
+                             errorDetails += " (Input too long, potentially file size)";
+                         }
+                    } catch (e) { /* Ignore if parsing error JSON fails */ }
                     appendMessage("Bot", `<span style="color: red;">❌ Error contacting AI: ${errorDetails}</span>`, true);
                     return;
                 }
@@ -670,10 +818,6 @@
                 const botResponse = data.choices?.[0]?.message?.content;
 
                 if (botResponse) {
-                    const lowerBotResponse = botResponse.toLowerCase();
-                    if (lowerBotResponse.includes("i cannot help with that") || lowerBotResponse.includes("i can't assist with that") || lowerBotResponse.includes("outside of my scope")) {
-                        console.warn("AI model refused the request despite passing keyword check.");
-                    }
                     appendMessage("Bot", botResponse.trim(), true);
                 } else {
                      console.error("No content found in response:", data);
@@ -689,25 +833,23 @@
             }
         }
 
-        // --- EVENT LISTENERS ---
+        // --- Event Listeners ---
         userInput.addEventListener('keypress', function (event) {
             if (event.key === 'Enter') {
-                event.preventDefault();
+                event.preventDefault(); // Prevent form submission/newline
                 sendMessage();
             }
         });
 
         window.addEventListener('DOMContentLoaded', (event) => {
-            // chatbox.style.display = "none"; // Controlled by 'visible' class now
              makeDraggable(chatbox, chatHeader); // Initialize dragging
+             clearFileState(); // Ensure clean file state on load/reload
         });
 
-
-        // --- DRAGGING FUNCTIONALITY ---
+        // --- Draggable Functionality (No Changes Needed) ---
         function makeDraggable(element, handle) {
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
             let isDragging = false;
-
             handle.onmousedown = dragMouseDown;
 
             function dragMouseDown(e) {
@@ -718,7 +860,7 @@
                 document.onmouseup = closeDragElement;
                 document.onmousemove = elementDrag;
                 isDragging = true;
-                element.style.transition = 'none'; // Prevent interference with dragging
+                element.style.transition = 'none'; // Disable transition during drag
             }
 
             function elementDrag(e) {
@@ -733,15 +875,15 @@
                 let newTop = element.offsetTop - pos2;
                 let newLeft = element.offsetLeft - pos1;
 
-                // Basic boundary check
+                // Boundary checks
                 const maxTop = window.innerHeight - element.offsetHeight;
                 const maxLeft = window.innerWidth - element.offsetWidth;
-                newTop = Math.max(0, Math.min(newTop, maxTop < 0 ? 0 : maxTop)); // Handle case where element is taller than viewport
-                newLeft = Math.max(0, Math.min(newLeft, maxLeft < 0 ? 0 : maxLeft)); // Handle case where element is wider than viewport
+                newTop = Math.max(0, Math.min(newTop, maxTop < 0 ? 0 : maxTop));
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft < 0 ? 0 : maxLeft));
 
                 element.style.top = newTop + "px";
                 element.style.left = newLeft + "px";
-                element.style.bottom = 'auto';
+                element.style.bottom = 'auto'; // Override fixed bottom/right
                 element.style.right = 'auto';
             }
 
@@ -749,9 +891,11 @@
                 document.onmouseup = null;
                 document.onmousemove = null;
                 isDragging = false;
-                element.style.transition = ''; // Re-enable CSS transitions
+                element.style.transition = ''; // Re-enable transitions
             }
         }
+
+        // Ensure page starts at top on load
         window.onload = function () {
             window.scrollTo(0, 0);
         };
