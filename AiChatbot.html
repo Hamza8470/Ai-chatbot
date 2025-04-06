@@ -9,9 +9,15 @@
 
     <!-- Bootstrap & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Marked.js for Markdown Rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
+        /* General Body Styling */
+        body {
+            font-family: sans-serif; /* Added a common font */
+        }
+
         /* Hero Section */
         .hero {
             background: linear-gradient(45deg, #007bff, #0056b3);
@@ -40,7 +46,21 @@
             font-size: 24px;
             cursor: pointer;
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease; /* Added opacity transition */
+            z-index: 1050; /* Ensure it's above other elements */
+            display: flex; /* Center icon */
+            justify-content: center; /* Center icon horizontally */
+            align-items: center; /* Center icon vertically */
+            opacity: 1; /* Start visible */
+        }
+        .chat-toggle-btn.hidden { /* Class to hide button smoothly */
+             opacity: 0;
+             transform: scale(0.5);
+             pointer-events: none; /* Prevent clicks when hidden */
+        }
+
+        .chat-toggle-btn:hover {
+             background: #0056b3; /* Darker on hover */
         }
 
         .chat-header {
@@ -48,76 +68,279 @@
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            padding: 10px;
+            padding: 12px 20px; /* Adjusted padding */
             background: #007bff;
             color: white;
-            border-radius: 7px;
+            border-top-left-radius: 12px; /* Slightly larger radius */
+            border-top-right-radius: 12px; /* Slightly larger radius */
+            cursor: grab; /* Indicate draggable header */
+        }
+        .chat-header:active {
+             cursor: grabbing;
         }
 
         .chat-close {
             cursor: pointer;
-            font-size: 20px;
+            font-size: 22px; /* Slightly larger */
             font-weight: bold;
+            padding: 5px; /* Easier to click */
+            line-height: 1; /* Prevent extra spacing */
+            color: rgba(255, 255, 255, 0.8); /* Slightly transparent */
+            transition: color 0.2s ease;
+        }
+        .chat-close:hover {
+             color: white; /* Fully opaque on hover */
         }
 
+        /* --- CHAT CONTAINER SIZE INCREASED --- */
         .chat-container {
             position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 400px;
-            height: 450px;
+            bottom: 30px; /* Adjusted position slightly */
+            right: 30px;  /* Adjusted position slightly */
+            width: 480px; /* Increased width */
+            height: 650px; /* Increased height */
+            max-height: calc(100vh - 50px); /* Allow more vertical space */
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            display: none;
+            border-radius: 12px; /* Match header radius */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            display: none; /* Initially hidden */
             flex-direction: column;
+            z-index: 1040; /* Below the button but above content */
+            border: 1px solid #ccc; /* Subtle border */
+            transition: opacity 0.3s ease, transform 0.3s ease; /* Add transition for appearing/disappearing */
+            opacity: 0; /* Start hidden */
+            transform: scale(0.95) translateY(10px); /* Start slightly scaled down */
+            transform-origin: bottom right; /* Animate from bottom right corner */
         }
+        .chat-container.visible { /* Class to show chat window smoothly */
+             display: flex; /* Need flex first */
+             opacity: 1;
+             transform: scale(1) translateY(0);
+        }
+        /* --- END SIZE INCREASE --- */
 
         .chat-body {
             flex-grow: 1;
             overflow-y: auto;
-            max-height: 330px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            padding: 20px; /* More padding */
+            background: #f8f9fa; /* Slightly off-white */
+            /* Removed border here to fit cleanly within container */
         }
+        /* Style messages */
+        .chat-body p {
+            margin-bottom: 15px; /* More space */
+            line-height: 1.5; /* Improve readability */
+            max-width: 100%; /* Ensure text wraps */
+            word-wrap: break-word; /* Prevent long words from overflowing */
+        }
+         .chat-body p b { /* Style sender labels */
+            display: block; /* Make label appear on its own line */
+            margin-bottom: 5px; /* Space below label */
+            color: #0056b3; /* Darker blue for labels */
+            font-size: 0.9em; /* Slightly smaller label */
+         }
+         .chat-body p:last-child {
+             margin-bottom: 0; /* No extra space after the last message */
+         }
+         /* Specific message styling */
+         .you-message {
+             text-align: right;
+             margin-left: 50px; /* Indent user messages from left */
+             background-color: #e7f0ff; /* Light blue background for user */
+             padding: 10px 15px;
+             border-radius: 15px 15px 0 15px; /* Rounded corners */
+         }
+         .you-message b {
+            color: #0056b3; /* Match theme */
+         }
+
+         .bot-message {
+             text-align: left;
+             margin-right: 50px; /* Indent bot messages from right */
+             background-color: #fff; /* White background for bot */
+             padding: 10px 15px;
+             border-radius: 15px 15px 15px 0; /* Different rounded corners */
+             border: 1px solid #eee;
+         }
+          .bot-message b {
+             color: #007bff; /* Slightly lighter blue */
+         }
+
+         /* Style the container div for bot messages added via Markdown */
+         .bot-message > div {
+             margin: 0;
+             padding: 0;
+         }
+         .bot-message div p,
+         .bot-message div ul,
+         .bot-message div ol,
+         .bot-message div pre,
+         .bot-message div blockquote { /* Added blockquote */
+             margin-bottom: 12px !important;
+             line-height: 1.6;
+         }
+          .bot-message ul, .bot-message ol {
+              padding-left: 25px;
+              margin-bottom: 12px;
+          }
+          .bot-message li {
+               margin-bottom: 8px;
+          }
+           .bot-message blockquote {
+                border-left: 4px solid #007bff;
+                padding-left: 15px;
+                margin-left: 5px;
+                color: #555;
+                font-style: italic;
+           }
+          .bot-message code:not(pre code) { /* Inline code */
+              background-color: #e9ecef;
+              padding: 3px 6px;
+              border-radius: 4px;
+              font-size: 0.9em;
+              font-family: monospace;
+          }
+           .bot-message pre { /* Code block */
+               background-color: #282c34; /* Darker background */
+               color: #abb2bf; /* Light text */
+               padding: 15px;
+               border-radius: 5px;
+               overflow-x: auto;
+               font-family: monospace;
+               font-size: 0.9em;
+               line-height: 1.4;
+           }
+           .bot-message pre code {
+                padding: 0;
+                background: none;
+                color: inherit;
+           }
+
+
+        .chat-footer {
+            padding: 15px 20px; /* Increased padding */
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-bottom-left-radius: 12px; /* Match container */
+            border-bottom-right-radius: 12px; /* Match container */
+        }
+        .chat-footer input[type="text"] {
+            flex-grow: 1;
+            margin-right: 10px;
+            border-radius: 20px;
+            padding: 10px 18px; /* Larger padding */
+            border: 1px solid #ced4da;
+            font-size: 1rem; /* Standard font size */
+        }
+        .chat-footer .btn-send {
+             flex-shrink: 0;
+             border-radius: 50%;
+             width: 44px; /* Slightly larger */
+             height: 44px; /* Slightly larger */
+             padding: 0;
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             background-color: #007bff;
+             border: none;
+             transition: background-color 0.2s ease;
+        }
+        .chat-footer .btn-send:hover {
+             background-color: #0056b3;
+        }
+        .chat-footer .btn-send svg {
+             width: 20px; /* Larger icon */
+             height: 20px;
+        }
+
 
         #para {
             text-decoration: underline;
             color: red;
-        }
-
-        @keyframes bubbleAnimation {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            50% {
-                transform: translateY(-5px);
-                opacity: 0.8;
-            }
-
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .typing-indicator {
             font-weight: bold;
-            color: black;
-            display: inline-block;
-            animation: bubbleAnimation 0.6s infinite;
         }
+
+        /* Typing Indicator Animation */
+        @keyframes bubbleAnimation {
+            0%, 100% { transform: translateY(0); opacity: 0.6; }
+            50% { transform: translateY(-3px); opacity: 1; }
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 7px; height: 7px; /* Slightly larger dots */
+            background-color: #0056b3;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bubbleAnimation 1.2s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+
+        #typingIndicator {
+             color: #6c757d;
+             font-style: italic;
+             padding: 10px 15px; /* Match message padding */
+             margin-right: 50px; /* Match bot message indent */
+        }
+         #typingIndicator b {
+             font-style: normal;
+             margin-right: 5px;
+         }
 
         #logo {
             width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
+            height: auto;
+            margin-bottom: 15px;
         }
+
+        /* FAQ Accordion Styling */
+        .accordion-button:not(.collapsed) { color: #fff; background-color: #007bff; }
+        .accordion-button:focus { box-shadow: none; }
+        .accordion-item { margin-bottom: 10px; border: 1px solid #dee2e6; border-radius: 5px; }
+        .accordion-body { background-color: #f8f9fa; }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) { /* Apply adjustments earlier */
+            .chat-container {
+                /* On medium/small screens, make it take more width/height */
+                width: calc(100% - 40px); /* Almost full width */
+                max-width: 480px; /* But don't exceed the desktop width */
+                height: calc(100vh - 100px); /* Almost full usable height */
+                max-height: 600px; /* Limit max height */
+                bottom: 70px; /* Adjust bottom position */
+                right: 20px; /* Keep consistent right padding */
+             }
+        }
+        @media (max-width: 480px) {
+             /* Keep some styles from medium, maybe adjust further if needed */
+             .chat-container {
+                 bottom: 70px; /* Ensure button isn't overlapped */
+                 height: calc(100vh - 90px); /* Optimize for small height */
+                 width: calc(100% - 30px); /* Adjust width for smallest screens */
+                 right: 15px; /* Adjust position for smallest screens */
+             }
+             .chat-toggle-btn {
+                 width: 60px;
+                 height: 60px;
+                 bottom: 15px;
+                 right: 15px;
+             }
+             .hero { padding: 60px 15px; }
+             h1.display-4 { font-size: 2.5rem; }
+             .features h4, .container h5 { font-size: 1.1rem; }
+             .you-message { margin-left: 10px; }
+             .bot-message { margin-right: 10px; }
+             #typingIndicator { margin-right: 10px; }
+             .chat-footer { padding: 10px 15px; }
+             .chat-footer input[type="text"] { padding: 8px 15px; }
+             .chat-footer .btn-send { width: 40px; height: 40px; }
+             .chat-footer .btn-send svg { width: 18px; height: 18px; }
+        }
+
     </style>
 </head>
 
@@ -128,7 +351,7 @@
         <div class="container">
             <img id="logo" src="chat-bot-logo-design-concept-600nw-1938811039.webp" alt="chatbot logo">
             <h1 class="display-4">Welcome to Profile Optimizer ChatBot</h1>
-            <p class="lead">Your AI-powered assistant to enhance and optimize your online profiles.</p>
+            <p class="lead">Your AI assistant for professional profile enhancement.</p>
         </div>
     </section>
 
@@ -137,17 +360,17 @@
         <div class="container">
             <h2 class="text-center mb-4">Why Use Profile Optimizer ChatBot?</h2>
             <div class="row text-center">
-                <div class="col-md-4">
-                    <h4>🚀 Instant Suggestions</h4>
-                    <p>Get AI-powered tips to improve your professional profiles.</p>
+                <div class="col-md-4 mb-3">
+                    <h4>🚀 Resume/CV Tips</h4>
+                    <p>Get AI suggestions to improve your resume or CV content.</p>
                 </div>
-                <div class="col-md-4">
-                    <h4>📊 Resume Optimization</h4>
-                    <p>Enhance your LinkedIn and resume with expert guidance.</p>
+                <div class="col-md-4 mb-3">
+                    <h4>📊 LinkedIn Optimization</h4>
+                    <p>Enhance your LinkedIn profile with tailored guidance.</p>
                 </div>
-                <div class="col-md-4">
-                    <h4>💬 Smart Chatbot</h4>
-                    <p>Ask questions and get real-time profile enhancement insights.</p>
+                <div class="col-md-4 mb-3">
+                    <h4>💬 Career Advice</h4>
+                    <p>Ask about job search strategies and personal branding.</p>
                 </div>
             </div>
         </div>
@@ -157,71 +380,83 @@
     <section class="container py-5">
         <h2 class="text-center mb-4">How It Works?</h2>
         <div class="row text-center">
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3">
                 <h5>1️⃣ Open ChatBot</h5>
-                <p>Click on the 💬 button to launch the chatbot.</p>
+                <p>Click the 💬 button below.</p>
             </div>
-            <div class="col-md-4">
-                <h5>2️⃣ Ask Questions</h5>
-                <p>Type in your query and get AI-driven recommendations.</p>
+            <div class="col-md-4 mb-3">
+                <h5>2️⃣ Ask Career Questions</h5>
+                <p>Type queries about resumes, LinkedIn, job search, etc.</p>
             </div>
-            <div class="col-md-4">
-                <h5>3️⃣ Optimize Your Profile</h5>
-                <p>Implement the chatbot's suggestions and stand out.</p>
+            <div class="col-md-4 mb-3">
+                <h5>3️⃣ Get Focused Advice</h5>
+                <p>Receive AI tips relevant to professional optimization.</p>
             </div>
         </div>
     </section>
 
     <!-- FAQs Section -->
-    <section class="features">
-        <div class="container">
+    <section class="features"> <!-- Reusing features styling for background -->
+        <div class="container pb-5"> <!-- Added bottom padding -->
             <h2 class="text-center mb-4">FAQs</h2>
             <div class="accordion" id="faqAccordion">
                 <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                    <h2 class="accordion-header" id="faqHeading1">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
                             How does this chatbot work?
                         </button>
                     </h2>
-                    <div id="faq1" class="accordion-collapse collapse show">
+                    <div id="faq1" class="accordion-collapse collapse show" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            The chatbot uses AI to analyze your profile and provides improvement suggestions.
+                            It checks if your question relates to professional profiles or careers. If relevant, it uses AI models via the OpenRouter API to generate improvement suggestions. Irrelevant questions are declined.
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq2">
+                    <h2 class="accordion-header" id="faqHeading2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
                             Is it free to use?
                         </button>
                     </h2>
-                    <div id="faq2" class="accordion-collapse collapse">
+                    <div id="faq2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes! The chatbot is completely free to use.
+                            Using this interface is free. The underlying AI model usage via OpenRouter *may* have costs depending on the specific model and your usage volume on their platform (free models are available).
                         </div>
                     </div>
                 </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            Can I use this chatbot on mobile?
+                 <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeading3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                            What topics can I ask about?
                         </button>
                     </h2>
-                    <div id="faq3" class="accordion-collapse collapse">
+                    <div id="faq3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes, the chatbot is fully responsive and works on all devices.
+                            Focus on: Resumes, CVs, LinkedIn profiles, professional portfolios, cover letters, job search strategies, interview preparation, and personal branding for career growth. General knowledge questions will be declined.
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#faq4">
+                    <h2 class="accordion-header" id="faqHeading4">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
                             Does this chatbot store my data?
                         </button>
                     </h2>
-                    <div id="faq4" class="accordion-collapse collapse">
+                    <div id="faq4" class="accordion-collapse collapse" aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            No, the chatbot does not store or share your data with third parties.
+                            This webpage does not store your conversation. However, OpenRouter and the AI model provider process your input according to their privacy policies. Avoid sharing highly sensitive personal data.
+                        </div>
+                    </div>
+                </div>
+                 <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqHeading5">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                            Why did the bot refuse my question?
+                        </button>
+                    </h2>
+                    <div id="faq5" class="accordion-collapse collapse" aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            The bot is specifically programmed to only assist with professional profile optimization and related career topics. It will decline questions outside this scope (e.g., math problems, weather, general trivia). Please rephrase your query to focus on career development.
                         </div>
                     </div>
                 </div>
@@ -232,108 +467,295 @@
     <!-- Contact Section -->
     <section class="container text-center py-5">
         <h1><b>Developed by:</b></h1>
-        <p id="para"><b>Mohammed Hamza 12307352</b></p>
-        <p id="para"><b>Maria tejaswi 12309910</b></p>
-        <p id="para"><b>Adidev Nayana 12319973</b></p>
-        <h2>Contact Us</h2>
-        <p>Have questions? Reach out to us at <a
-                href="mailto:support@profileoptimizer.com">support@profileoptimizer.com</a></p>
+        <p id="para">Mohammed Hamza 12307352</p>
+        <p id="para">Maria tejaswi 12309910</p>
+        <p id="para">Adidev Nayana 12319973</p>
+        <h2 class="mt-4">Contact Us</h2>
+        <p>Have questions or feedback? Reach out to us at <a href="mailto:support@profileoptimizer.com">support@profileoptimizer.com</a></p>
     </section>
 
     <!-- Floating Chatbot Button -->
-    <button class="chat-toggle-btn" onclick="toggleChat()">💬</button>
+    <button class="chat-toggle-btn" onclick="toggleChat()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-chat-dots-fill" viewBox="0 0 16 16">
+            <path d="M16 8c0 3.866-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.584.296-1.925.864-4.181 1.234-.2.032-.352-.176-.273-.362.354-.836.674-1.95.77-2.966C.744 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7M5 8a1 1 0 1 0-2 0 1 1 0 0 0 2 0m4 0a1 1 0 1 0-2 0 1 1 0 0 0 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+        </svg>
+    </button>
 
     <!-- Chatbot Window -->
     <div class="chat-container" id="chatbox">
-        <div class="chat-header d-flex justify-content-between align-items-center">
-            <span>Profile Optimizer ChatBot</span>
-            <span class="chat-close" onclick="toggleChat()">❌</span>
+        <div class="chat-header" id="chatHeader"> <!-- Added ID for dragging -->
+            <span>Profile Optimizer Bot</span>
+            <span class="chat-close" onclick="toggleChat()">✕</span> <!-- Using a simpler X -->
         </div>
-        <div class="chat-body" id="response">Hi!👋🏻 Welcome to Profile Optimizer ChatBot🤖
-            <p>How can I assist you today?</p>
+        <div class="chat-body" id="response">
+             <!-- Initial bot message -->
+             <p class="bot-message"><b>Bot:</b> Hi! 👋🏻 I'm the Profile Optimizer Bot. I can help with resumes, LinkedIn, CVs, job searching, and interviews. How can I assist your career development today?</p>
         </div>
-        <div class="chat-footer mt-2">
-            <input type="text" class="form-control" id="userInput" placeholder="Type your question">
-            <button class="btn btn-success btn-send mt-2" onclick="sendMessage()">Ask</button>
+        <div class="chat-footer">
+            <input type="text" class="form-control" id="userInput" placeholder="Ask about resumes, LinkedIn, etc." aria-label="User input for chatbot">
+            <button class="btn btn-primary btn-send" onclick="sendMessage()" aria-label="Send message">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-send-fill" viewBox="0 0 16 16">
+                    <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.001.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z"/>
+                </svg>
+            </button>
         </div>
     </div>
 
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+        const chatbox = document.getElementById("chatbox");
+        const chatHeader = document.getElementById("chatHeader");
+        const responseDiv = document.getElementById('response');
+        const userInput = document.getElementById('userInput');
+        const toggleButton = document.querySelector('.chat-toggle-btn');
+
+        // --- CONFIGURATION ---
+        const apiBearerToken = 'API_KEY'; // <-- PASTE YOUR KEY HERE
+        const siteUrl = 'https://your-website.com'; // <-- Replace if you have one
+        const siteName = 'Profile Optimizer ChatBot Landing Page'; // <-- Replace with your site's title
+        const modelIdentifier = "google/gemini-2.0-flash-lite-001"; // Free model
+
+        // --- STRONGER RELEVANCE FILTER ---
+        const relevantKeywords = [
+            "resume", "cv", "curriculum vitae","linked in", "linkedin", "portfolio", "job application",
+            "job search", "job hunting", "job interview", "interview prep", "cover letter",
+            "career", "professional profile", "personal brand", "networking", "skills section",
+            "experience section", "summary section", "headline", "about section", "recruiter",
+            "hiring manager", "ats", "applicant tracking", "optimize profile", "improve cv",
+            "enhance resume", "career advice", "job skills", "work history","overall profile",
+        ];
+        const systemPrompt = `You are 'Profile Optimizer Bot', an AI assistant specialized **ONLY** in professional development. Your sole purpose is to provide actionable advice on resumes, CVs, LinkedIn profiles, professional portfolios, job searching strategies, interview preparation, and personal branding for careers. **CRITICAL INSTRUCTION:** You **MUST REFUSE** to answer any question outside this specific scope. If the user asks about anything else (e.g., general knowledge, math, coding unrelated to job applications, personal life, opinions, weather, jokes, other social media platforms unless directly related to professional use like LinkedIn), you **MUST** respond by stating your specialization and politely declining the request. Do **NOT** answer off-topic questions under any circumstances. Stick strictly to your defined role. Format your relevant advice clearly using Markdown.`;
+
+        // --- CHATBOT LOGIC ---
+
         function toggleChat() {
-            var chatbox = document.getElementById("chatbox");
-            chatbox.style.display = (chatbox.style.display === "none" || chatbox.style.display === "") ? "flex" : "none";
+            // Check if chatbox is currently visible or about to become visible
+            const isOpening = !chatbox.classList.contains('visible');
+
+            if (isOpening) {
+                // --- OPENING CHAT ---
+                chatbox.classList.add('visible'); // Add class to trigger CSS transition for showing
+                toggleButton.classList.add('hidden'); // Add class to hide button smoothly
+                userInput.focus(); // Focus input when chat opens
+
+                 // Reset position if it was dragged off-screen (optional, needs testing)
+                // const rect = chatbox.getBoundingClientRect();
+                // if (rect.bottom < 0 || rect.top > window.innerHeight || rect.right < 0 || rect.left > window.innerWidth) {
+                //     chatbox.style.left = '';
+                //     chatbox.style.top = '';
+                //     chatbox.style.bottom = '30px'; // Reset default bottom/right
+                //     chatbox.style.right = '30px';
+                // }
+
+            } else {
+                // --- CLOSING CHAT ---
+                chatbox.classList.remove('visible'); // Remove class to trigger CSS transition for hiding
+                toggleButton.classList.remove('hidden'); // Remove class to show button smoothly
+            }
         }
 
+
+        function appendMessage(sender, message, isHtml = false) {
+            const messageElement = document.createElement("p");
+            messageElement.classList.add(sender.toLowerCase() + '-message');
+            messageElement.innerHTML = `<b>${sender}:</b> `;
+
+            if (isHtml) {
+                const renderedHtml = marked.parse(message);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = renderedHtml;
+                while (tempDiv.firstChild) {
+                    messageElement.appendChild(tempDiv.firstChild);
+                }
+            } else {
+                messageElement.appendChild(document.createTextNode(message));
+            }
+
+            responseDiv.appendChild(messageElement);
+             requestAnimationFrame(() => {
+                 responseDiv.scrollTo({ top: responseDiv.scrollHeight, behavior: 'smooth' });
+             });
+        }
+
+
+         function showTypingIndicator() {
+             hideTypingIndicator();
+             const typingIndicator = document.createElement("p");
+             typingIndicator.id = "typingIndicator";
+             typingIndicator.classList.add('bot-message');
+             typingIndicator.innerHTML = `<b>Bot:</b> <span class="typing-indicator"><span></span><span></span><span></span></span>`;
+             responseDiv.appendChild(typingIndicator);
+             requestAnimationFrame(() => { // Smooth scroll
+                responseDiv.scrollTo({ top: responseDiv.scrollHeight, behavior: 'smooth' });
+            });
+         }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById("typingIndicator");
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function isQueryRelevant(query) {
+            const lowerCaseQuery = query.toLowerCase();
+            return relevantKeywords.some(keyword => lowerCaseQuery.includes(keyword));
+        }
+
+
         async function sendMessage() {
-            const input = document.getElementById('userInput').value.trim();
-            document.getElementById('userInput').value = "";
-            document.getElementById('userInput').focus(); // Keeps cursor in input field
+            const input = userInput.value.trim();
+            if (!input) return;
 
-            const responseDiv = document.getElementById('response');
+            if (!apiBearerToken || apiBearerToken.startsWith('sk-or-v1-YOUR') || apiBearerToken.length < 50) {
+                 appendMessage("Bot", `<span style="color: orange; font-weight: bold;">SETUP NEEDED:</span> Please add a valid OpenRouter API key in the script section of this HTML file to enable the AI features.`, true);
+                 userInput.value = "";
+                 return;
+            }
 
-            if (!input) {
-                responseDiv.innerHTML += '<p style="color: red;">Please enter a message.</p>';
+            userInput.value = "";
+            appendMessage("You", input);
+
+            if (!isQueryRelevant(input)) {
+                console.log("Query deemed irrelevant by keyword check:", input);
+                const refusalMessage = "My apologies, I specialize only in professional development topics like resumes, LinkedIn, job searching, and interviews. I can't help with questions outside of that scope. Could you ask something related to career optimization?";
+                setTimeout(() => { appendMessage("Bot", refusalMessage); }, 300);
+                userInput.focus();
                 return;
             }
 
-            responseDiv.innerHTML += `<p><b>You:</b> ${input}</p>`;
-            responseDiv.scrollTop = responseDiv.scrollHeight;
-
-            const relevantKeywords = ["resume", "CV", "LinkedIn", "profile", "portfolio", "interview", "job application", "career", "professional", "skills", "optimization", "instagram", "Facebook", "Twitter", "job search", "career growth", "job hunting", "networking", "personal branding", "job market"];
-            const isRelevant = relevantKeywords.some(keyword => input.toLowerCase().includes(keyword));
-
-            if (!isRelevant) {
-                responseDiv.innerHTML += `<p><b>Bot:</b> I'm here to assist with profile optimization only. Please ask questions related to resumes, LinkedIn, CVs, or career growth.</p>`;
-                responseDiv.scrollTop = responseDiv.scrollHeight;
-                return;
-            }
-
-            // Add Typing Indicator
-            const typingIndicator = document.createElement("p");
-            typingIndicator.innerHTML = `<b>Bot:</b> <span class="typing-indicator">Analysing...</span>`;
-            typingIndicator.id = "typingIndicator";
-            responseDiv.appendChild(typingIndicator);
-            responseDiv.scrollBottom = responseDiv.scrollHeight;
+            console.log("Query deemed relevant, sending to AI:", input);
+            showTypingIndicator();
 
             try {
                 const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
-                    headers: { Authorization: 'Bearer API_KEY', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model: 'deepseek/deepseek-r1:free', messages: [{ role: 'user', content: input }] }),
+                    headers: {
+                        'Authorization': `Bearer ${apiBearerToken}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': siteUrl,
+                        'X-Title': siteName
+                    },
+                    body: JSON.stringify({
+                        "model": modelIdentifier,
+                        "messages": [
+                            { "role": "system", "content": systemPrompt },
+                            { "role": "user", "content": input }
+                        ],
+                         "temperature": 0.6,
+                         "max_tokens": 600,
+                    }),
                 });
 
+                hideTypingIndicator();
+
+                if (!response.ok) {
+                    let errorDetails = `HTTP Error: ${response.status} ${response.statusText}`;
+                    try {
+                         const errorData = await response.json();
+                         console.error("API Error Response:", errorData);
+                         errorDetails += ` - ${errorData.error?.message || 'No details provided.'}`;
+                         if(response.status === 401) errorDetails += " (Check API key validity/permissions)";
+                         if(response.status === 402) errorDetails += " (Check OpenRouter credits)";
+                         if(response.status === 429) errorDetails += " (Rate limit likely exceeded)";
+                    } catch (e) { console.error("Could not parse error JSON:", e); }
+                    appendMessage("Bot", `<span style="color: red;">❌ Error contacting AI: ${errorDetails}</span>`, true);
+                    return;
+                }
+
                 const data = await response.json();
+                console.log("API Success Response:", data);
+                const botResponse = data.choices?.[0]?.message?.content;
 
-                // Remove Typing Indicator Before Showing Response
-                const indicator = document.getElementById("typingIndicator");
-                if (indicator) {
-                    indicator.remove();
+                if (botResponse) {
+                    const lowerBotResponse = botResponse.toLowerCase();
+                    if (lowerBotResponse.includes("i cannot help with that") || lowerBotResponse.includes("i can't assist with that") || lowerBotResponse.includes("outside of my scope")) {
+                        console.warn("AI model refused the request despite passing keyword check.");
+                    }
+                    appendMessage("Bot", botResponse.trim(), true);
+                } else {
+                     console.error("No content found in response:", data);
+                     appendMessage("Bot", "Sorry, I received an empty response. Please try rephrasing.");
                 }
 
-                responseDiv.innerHTML += `<p><b>Bot:</b> ${marked.parse(data.choices?.[0]?.message?.content || 'No response')}</p>`;
-                responseDiv.scrollBottom = responseDiv.scrollHeight;
             } catch (error) {
-                const indicator = document.getElementById("typingIndicator");
-                if (indicator) {
-                    indicator.remove();
-                }
-                responseDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+                hideTypingIndicator();
+                console.error("Fetch/Network Error:", error);
+                appendMessage("Bot", `<span style="color: red;">❌ Network Error: Could not reach AI service. Check connection. (${error.message})</span>`, true);
+            } finally {
+                 userInput.focus();
             }
         }
 
-        // Send message when pressing Enter
-        document.getElementById('userInput').addEventListener('keypress', function (event) {
+        // --- EVENT LISTENERS ---
+        userInput.addEventListener('keypress', function (event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission (if inside a form)
+                event.preventDefault();
                 sendMessage();
             }
         });
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // chatbox.style.display = "none"; // Controlled by 'visible' class now
+             makeDraggable(chatbox, chatHeader); // Initialize dragging
+        });
+
+
+        // --- DRAGGING FUNCTIONALITY ---
+        function makeDraggable(element, handle) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let isDragging = false;
+
+            handle.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                isDragging = true;
+                element.style.transition = 'none'; // Prevent interference with dragging
+            }
+
+            function elementDrag(e) {
+                if (!isDragging) return;
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                let newTop = element.offsetTop - pos2;
+                let newLeft = element.offsetLeft - pos1;
+
+                // Basic boundary check
+                const maxTop = window.innerHeight - element.offsetHeight;
+                const maxLeft = window.innerWidth - element.offsetWidth;
+                newTop = Math.max(0, Math.min(newTop, maxTop < 0 ? 0 : maxTop)); // Handle case where element is taller than viewport
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft < 0 ? 0 : maxLeft)); // Handle case where element is wider than viewport
+
+                element.style.top = newTop + "px";
+                element.style.left = newLeft + "px";
+                element.style.bottom = 'auto';
+                element.style.right = 'auto';
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                isDragging = false;
+                element.style.transition = ''; // Re-enable CSS transitions
+            }
+        }
         window.onload = function () {
             window.scrollTo(0, 0);
         };
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
