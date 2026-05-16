@@ -584,7 +584,11 @@
         const fileStatusSpan = document.getElementById('fileStatus');
 
         // --- CONFIGURATION ---
-        const apiEndpoint = '/.netlify/functions/chat';
+        const isLocalHost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+        const apiEndpoints = isLocalHost
+            ? ['/api/chat', '/.netlify/functions/chat']
+            : ['/.netlify/functions/chat', '/api/chat'];
+        const browserOpenRouterApiKey = window.OPENROUTER_API_KEY || localStorage.getItem('OPENROUTER_API_KEY') || '';
         const modelIdentifier = "google/gemini-2.0-flash-lite-001"; // Use a capable free model
         const MAX_FILE_SIZE_BYTES = 100 * 1024; // 100 KB limit for text file
 
@@ -731,28 +735,25 @@
             const input = userInput.value.trim();
             const fileWasAttached = uploadedFileName !== null;
 
-            if (!input && !fileWasAttached) return; // Requires text or a staged file
+            if (!input && !fileWasAttached) return;
 
-            userInput.value = ""; // Clear input field immediately
+            userInput.value = "";
             appendMessage("You", input || "(Asked to process uploaded file)", false, fileWasAttached ? uploadedFileName : null);
 
-            // Use combined input for relevance check, especially if only a file was uploaded
             const combinedInputForRelevance = (input || "") + (fileWasAttached ? " analyze file" : "");
             if (!isQueryRelevant(combinedInputForRelevance)) {
                 console.log("Query deemed irrelevant:", input);
                 const refusalMessage = "My apologies, I specialize only in professional development topics like resumes, LinkedIn, job searching, and interviews. I can't help with questions outside of that scope. Could you ask something related to career optimization, perhaps about the file you uploaded?";
                 setTimeout(() => { appendMessage("Bot", refusalMessage); }, 300);
-                userInput.focus(); // Allow user to rephrase
-                // Don't clear file yet, user might ask a relevant question next
+                userInput.focus();
                 return;
             }
 
             console.log("Query deemed relevant, processing...");
             showTypingIndicator();
 
-            // Prepare message for API, including file content if present
             let messageForApi = input;
-            const sentFileName = uploadedFileName; // Store name before clearing state
+            const sentFileName = uploadedFileName;
             if (fileWasAttached && uploadedFileContent) {
                 const fileHeader = `--- START OF UPLOADED FILE (${sentFileName}) ---\n`;
                 const fileFooter = `\n--- END OF UPLOADED FILE ---`;
@@ -760,44 +761,73 @@
                 console.log(`Sending message with attached file content: ${sentFileName}`);
             }
 
-            // IMPORTANT: Clear the staged file state *after* preparing the API message
             clearFileState();
 
             try {
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "model": modelIdentifier,
-                        "messages": [
-                            { "role": "system", "content": systemPrompt },
-                            { "role": "user", "content": messageForApi } // Send combined message
-                        ],
-                         "temperature": 0.6,
-                         "max_tokens": 1500, // Allow more tokens for file analysis
-                    }),
+                const requestBody = JSON.stringify({
+                    "model": modelIdentifier,
+                    "messages": [
+                        { "role": "system", "content": systemPrompt },
+                        { "role": "user", "content": messageForApi }
+                    ],
+                    "temperature": 0.6,
+                    "max_tokens": 1500
                 });
 
-                hideTypingIndicator();
+                let response = null;
+                let lastError = null;
+
+                for (const endpoint of apiEndpoints) {
+                    try {
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: requestBody,
+                        });
+
+                        if (response.ok || ![404, 405].includes(response.status)) {
+                            break;
+                        }
+                    } catch (fetchError) {
+                        lastError = fetchError;
+                    }
+                }
+
+                if (!response || [404, 405].includes(response.status)) {
+                    if (!browserOpenRouterApiKey) {
+                        throw lastError || new Error('Backend not reachable and no browser API key is set.');
+                    }
+
+                    response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${browserOpenRouterApiKey}`,
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': window.location.origin || 'http://localhost',
+                            'X-Title': document.title || 'Profile Optimizer ChatBot Landing Page'
+                        },
+                        body: requestBody,
+                    });
+                }
 
                 if (!response.ok) {
                     let errorDetails = `HTTP Error: ${response.status} ${response.statusText}`;
                     try {
-                         const errorData = await response.json();
-                         console.error("API Error Response:", errorData);
-                         errorDetails += ` - ${errorData.error?.message || 'No details provided.'}`;
-                         if(response.status === 401) errorDetails += " (Check API key)";
-                         if(response.status === 402) errorDetails += " (Check OpenRouter credits)";
-                         if(response.status === 429) errorDetails += " (Rate limit)";
-                         if(response.status === 400 && errorData.error?.message?.includes("token limit")) {
-                             errorDetails += " (Input too long, potentially file size)";
-                         }
+                        const errorData = await response.json();
+                        console.error("API Error Response:", errorData);
+                        errorDetails += ` - ${errorData.error?.message || errorData.error || 'No details provided.'}`;
+                        if (response.status === 401) errorDetails += " (Check API key)";
+                        if (response.status === 402) errorDetails += " (Check OpenRouter credits)";
+                        if (response.status === 429) errorDetails += " (Rate limit)";
+                        if (response.status === 400 && errorData.error?.message?.includes("token limit")) {
+                            errorDetails += " (Input too long, potentially file size)";
+                        }
                     } catch (e) { /* Ignore if parsing error JSON fails */ }
                     appendMessage("Bot", `<span style="color: red;">❌ Error contacting AI: ${errorDetails}</span>`, true);
                     return;
                 }
+
+                hideTypingIndicator();
 
                 const data = await response.json();
                 console.log("API Success Response:", data);
@@ -806,16 +836,15 @@
                 if (botResponse) {
                     appendMessage("Bot", botResponse.trim(), true);
                 } else {
-                     console.error("No content found in response:", data);
-                     appendMessage("Bot", "Sorry, I received an empty response. Please try rephrasing.");
+                    console.error("No content found in response:", data);
+                    appendMessage("Bot", "Sorry, I received an empty response. Please try rephrasing.");
                 }
-
             } catch (error) {
                 hideTypingIndicator();
                 console.error("Fetch/Network Error:", error);
                 appendMessage("Bot", `<span style="color: red;">❌ Network Error: Could not reach AI service. Check connection. (${error.message})</span>`, true);
             } finally {
-                 userInput.focus();
+                userInput.focus();
             }
         }
 

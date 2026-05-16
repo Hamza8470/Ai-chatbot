@@ -1,9 +1,24 @@
 exports.handler = async (event) => {
   try {
+    const corsHeaders = {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    };
+
+    if (event.httpMethod === 'OPTIONS') {
+      return {
+        statusCode: 204,
+        headers: corsHeaders,
+        body: ''
+      };
+    }
+
     if (event.httpMethod !== 'POST') {
       return {
         statusCode: 405,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Method not allowed' })
       };
     }
@@ -12,7 +27,7 @@ exports.handler = async (event) => {
     if (!apiKey) {
       return {
         statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Missing OPENROUTER_API_KEY on Netlify' })
       };
     }
@@ -34,13 +49,13 @@ exports.handler = async (event) => {
     const text = await response.text();
     return {
       statusCode: response.status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: text
     };
   } catch (error) {
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: error.message || 'Unknown error' })
     };
   }
