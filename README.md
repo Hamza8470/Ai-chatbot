@@ -22,3 +22,9 @@ An AI profile optimizer chatbot can perform several tasks to enhance and optimiz
 10) Metrics and Tracking: The chatbot can track the profile’s performance, such as views, connections, or responses, and suggest improvements over time.
 
 This type of chatbot is especially useful for job seekers, freelancers, or anyone looking to present a stronger online identity.
+
+Production note: this is a static frontend, so `ai.env` is for local/config notes only and is not read by the browser. For production, keep the OpenRouter key out of the published site and inject it at runtime or move the API call behind a backend proxy.
+
+Deployment note: the repo now includes a small Java proxy server. Set `OPENROUTER_API_KEY` on the host, run the jar, and use the server URL for the app.
+
+Netlify note: the site can also be deployed as a static site on Netlify. Set `OPENROUTER_API_KEY` in Netlify site variables, and the frontend will call the Netlify Function at `/.netlify/functions/chat`.

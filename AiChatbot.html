@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile Optimizer ChatBot</title>
-    <link rel="icon" type="image/png" href="download.png" id="botAvatar">
+    <link rel="icon" type="image/png" href="download1.png" id="botAvatar">
 
     <!-- Bootstrap & Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
@@ -525,8 +525,6 @@
     <section class="container text-center py-5">
         <h1><b>Developed by:</b></h1>
         <p id="para">Mohammed Hamza 12307352</p>
-        <p id="para">Maria tejaswi 12309910</p>
-        <p id="para">Adidev Nayana 12319973</p>
         <h2 class="mt-4">Contact Us</h2>
         <p>Have questions or feedback? Reach out to us at <a href="mailto:support@profileoptimizer.com">support@profileoptimizer.com</a></p>
     </section>
@@ -586,9 +584,7 @@
         const fileStatusSpan = document.getElementById('fileStatus');
 
         // --- CONFIGURATION ---
-        const apiBearerToken = 'API_KEY'; // <-- PASTE YOUR KEY HERE
-        const siteUrl = 'https://your-website.com'; // <-- Replace if you have one
-        const siteName = 'Profile Optimizer ChatBot Landing Page'; // <-- Replace with your site's title
+        const apiEndpoint = '/.netlify/functions/chat';
         const modelIdentifier = "google/gemini-2.0-flash-lite-001"; // Use a capable free model
         const MAX_FILE_SIZE_BYTES = 100 * 1024; // 100 KB limit for text file
 
@@ -737,13 +733,6 @@
 
             if (!input && !fileWasAttached) return; // Requires text or a staged file
 
-            if (!apiBearerToken || apiBearerToken === 'api_key' || apiBearerToken.length < 50) {
-                 appendMessage("Bot", `<span style="color: orange; font-weight: bold;">SETUP NEEDED:</span> Please add a valid OpenRouter API key in the script section.`, true);
-                 userInput.value = "";
-                 clearFileState();
-                 return;
-            }
-
             userInput.value = ""; // Clear input field immediately
             appendMessage("You", input || "(Asked to process uploaded file)", false, fileWasAttached ? uploadedFileName : null);
 
@@ -775,13 +764,10 @@
             clearFileState();
 
             try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${apiBearerToken}`,
-                        'Content-Type': 'application/json',
-                        'HTTP-Referer': siteUrl,
-                        'X-Title': siteName
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         "model": modelIdentifier,
