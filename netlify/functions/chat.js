@@ -1,56 +1,57 @@
 exports.handler = async (event) => {
-  try {
-    const corsHeaders = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders, body: '' };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: 'Method not allowed' })
     };
+  }
 
-    if (event.httpMethod === 'OPTIONS') {
+  try {
+    const payload = JSON.parse(event.body || '{}');
+
+    const baseUrl = process.env.OPENAI_BASE_URL;
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!baseUrl || !apiKey) {
       return {
-        statusCode: 204,
+        statusCode: 503,
         headers: corsHeaders,
-        body: ''
+        body: JSON.stringify({ error: 'AI service not available. Please try again later.' })
       };
     }
 
-    if (event.httpMethod !== 'POST') {
-      return {
-        statusCode: 405,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: 'Method not allowed' })
-      };
-    }
-
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: 'Missing OPENROUTER_API_KEY on Netlify' })
-      };
-    }
-
-    const incomingBody = event.body || '{}';
-    const payload = JSON.parse(incomingBody);
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.SITE_URL || 'https://your-site.netlify.app',
-        'X-Title': process.env.SITE_NAME || 'Profile Optimizer ChatBot Landing Page'
+        'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        messages: payload.messages || [],
+        temperature: payload.temperature || 0.7,
+        max_tokens: payload.max_tokens || 1500
+      })
     });
 
-    const text = await response.text();
+    const data = await response.json();
+
     return {
       statusCode: response.status,
       headers: corsHeaders,
-      body: text
+      body: JSON.stringify(data)
     };
   } catch (error) {
     return {
