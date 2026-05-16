@@ -1,0 +1,29 @@
+name: Maven CI for Static Website
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Run Maven Package
+      run: mvn -B clean package
+
+    - name: Upload built JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: website-jar
+        path: target/*.jar
